@@ -1,0 +1,9 @@
+# toy lab + tests (CPU)
+numpy>=1.26
+pandas>=2.0
+torch>=2.1
+scipy>=1.11
+pytest>=8
+# optional: plots in the notebook
+matplotlib>=3.8
+# the verl-agent recipe (recipe/ProgressTree) has its own setup: see recipe/ProgressTree/README.md

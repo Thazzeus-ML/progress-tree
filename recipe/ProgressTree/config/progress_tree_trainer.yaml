@@ -1,0 +1,58 @@
+# recipe/GraphGPO/config/graphgpo_trainer.yaml (copied: hydra only allows hydra.searchpath in the
+# primary config, so it cannot be nested) + the algorithm.progress_tree block.
+hydra:
+  searchpath:
+    - file://verl/trainer/config
+
+defaults:
+  - ppo_trainer
+  - _self_
+
+data:
+  gen_batch_size: ${data.train_batch_size}
+
+reward_model:
+  reward_manager: episode
+  overlong_buffer:
+    enable: False
+    len: 0
+    penalty_factor: 0.0
+    log: False
+
+algorithm:
+  adv_estimator: graphgpo          # keep: the trainer's GraphGPO code path; arms replace the credit
+  gamma: 0.10
+  graphgpo:
+    step_advantage_w: 1.0
+    episode_advantage_w: 1.0
+    mode: "mean_std_norm"
+    enable_similarity: False       # also used by the progress arms (state merging for value pooling)
+    similarity_thresh: 0.95
+    normalize_distance: False
+  filter_groups:
+    enable: False
+    metric: null
+    max_num_gen_batches: 0
+  progress_tree:
+    arm: progress_tree             # graphgpo | progress | progress_tree | progress_tree_spread | tree_grpo | tree_graphgpo
+    credit: progress_loo           # progress_loo | progress  (progress* arms)
+    branch_mode: null              # override the arm's rule: smart | spread | random
+    branch_max_nodes: 12           # branch points per task group per iteration (~55-60% of env steps on branches early on)
+    branch_K: 1                    # continuations per branch point
+    branch_horizon: null           # cap on branch length (default: until done or env.max_steps)
+    sigma_min: 0.2                 # advantage scale floor, as a fraction of reward_scale
+    reward_scale: null             # outcome scale (ALFWorld: 10); null = max |episode score| in the batch
+    penalty_weight: 1.0            # invalid-action penalty enters exactly as in GraphGPO's episode term (x this weight)
+    max_hours: null                # wall-clock training budget in hours (validation time excluded)
+    log_dir: null                  # CSV log location (default: trainer.default_local_dir)
+    seed: 0
+
+env:
+  webshop:
+    observation_mode: text_rich
+
+trainer:
+  project_name: verl-progress-tree
+  val_out: False
+  val_only: False
+  test_only: False
